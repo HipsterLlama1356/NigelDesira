@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>duo-dates — Plan</title>
+<style>
+  :root {
+    --bg: #fff5f8;
+    --text: #1f1626;
+    --muted: #7a6a72;
+    --accent: #e85a8b;
+    --border: #f1d3df;
+    --code-bg: #fde7ee;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1, h2, h3 { color: var(--text); margin-top: 1.6em; }
+  h1 { font-size: 28px; border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
+  h2 { font-size: 22px; }
+  h3 { font-size: 18px; color: var(--accent); }
+  p, li { font-size: 15px; }
+  code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  pre { background: #fff; border: 1px solid var(--border); border-radius: 8px;
+        padding: 12px 14px; overflow-x: auto; font-size: 12.5px; line-height: 1.45; }
+  pre code { background: transparent; padding: 0; }
+  ul { padding-left: 22px; }
+  blockquote { border-left: 4px solid var(--accent); margin: 16px 0; padding: 4px 14px;
+               background: #fff; color: var(--muted); border-radius: 0 6px 6px 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  @media print {
+    body { background: white; }
+    main { max-width: 100%; padding: 0; }
+    pre { page-break-inside: avoid; }
+    h1, h2, h3 { page-break-after: avoid; }
+  }
+  .print-hint { background: #fff; border: 1px dashed var(--accent); border-radius: 8px;
+                padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: var(--muted); }
+  @media print { .print-hint { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="print-hint">Tip: open this page in your phone browser and use Share → Print → Save as PDF if you want a PDF copy.</div>
+  <h1>Plan: Build duo-dates — a date planning mobile app</h1>
+<h2>Context</h2>
+<p>The <code>NigelDesira</code> repository is currently empty (no commits, no files). The user wants a React Native mobile app for planning dates with their partner. The app needs to:</p>
+<ol>
+<li>Browse curated date ideas with location/category info</li>
+<li>Open Google Maps to find nearby venues for each idea</li>
+<li>Save date ideas for later</li>
+<li>Schedule a date and get a notification reminder + a downloadable <code>.ics</code> calendar file</li>
+<li>Rebrand the project as <code>duo-dates</code></li>
+</ol>
+<p>The user also asked to &quot;rename the file and repositories.&quot; The GitHub MCP scope is locked to <code>hipsterllama1356/nigeldesira</code>, so the GitHub repo rename must be done by the user via GitHub Settings — I&#39;ll document that step. Inside the repo, all branding (package name, app name, README) will use <code>duo-dates</code>. Pushes go to branch <code>claude/date-planning-app-aprSE</code>.</p>
+<h2>Tech stack</h2>
+<ul>
+<li><strong>Expo (React Native, TypeScript)</strong> — easiest cross-platform setup, runs in Expo Go on iOS/Android without Xcode/Android Studio</li>
+<li><strong>React Navigation</strong> (bottom tabs + native stack) — standard navigation</li>
+<li><strong>AsyncStorage</strong> (<code>@react-native-async-storage/async-storage</code>) — persist saved ideas and scheduled dates</li>
+<li><strong>expo-notifications</strong> — local push notifications for reminders</li>
+<li><strong>expo-file-system + expo-sharing</strong> — write <code>.ics</code> to a temp file and open the share sheet so the user can save it to Calendar</li>
+<li><strong>React Native <code>Linking</code></strong> — open Google Maps search URLs</li>
+</ul>
+<p>No external API keys required.</p>
+<h2>File layout</h2>
+<pre><code>duo-dates/                       (folder name; user renames on GitHub UI)
+├── app.json                     Expo config: name &quot;duo-dates&quot;, slug, icon, notifications plugin
+├── package.json                 name &quot;duo-dates&quot;
+├── tsconfig.json                strict TS
+├── babel.config.js              expo preset
+├── App.tsx                      Root: NavigationContainer + tab navigator + notification permission bootstrap
+├── README.md                    What the app does, run instructions, repo-rename note
+├── assets/                      icon.png, splash.png (placeholder PNGs)
+└── src/
+    ├── types.ts                 DateIdea, SavedIdea, ScheduledDate
+    ├── data/ideas.ts            ~20 curated ideas across categories: Food, Outdoors, Indoor, Adventure, Cozy, Cultural
+    ├── storage/storage.ts       getSaved, addSaved, removeSaved, getScheduled, addScheduled, removeScheduled (AsyncStorage)
+    ├── notifications/notifications.ts  requestPermission, scheduleReminder, cancelReminder
+    ├── calendar/ics.ts          buildIcs(date) -&gt; string; exportIcs(date) -&gt; share sheet
+    ├── maps/maps.ts             openMapsSearch(query) using Linking + platform-aware URL
+    ├── components/
+    │   ├── IdeaCard.tsx         Card with emoji, title, category chip, duration
+    │   └── EmptyState.tsx       Reusable empty-list placeholder
+    └── screens/
+        ├── BrowseScreen.tsx     Category filter chips + FlatList of IdeaCards
+        ├── IdeaDetailScreen.tsx Title, description, &quot;Find nearby on Maps&quot; button, &quot;Save&quot; toggle, &quot;Schedule a date&quot; button → opens DateTimePicker
+        ├── SavedScreen.tsx      List of saved ideas; tap → IdeaDetail
+        └── ScheduledScreen.tsx  List of scheduled dates with live countdown, &quot;Export .ics&quot; button, &quot;Cancel&quot; button
+</code></pre>
+<h2>Key behaviors</h2>
+<ul>
+<li><strong>Browse</strong>: tabs at bottom (Browse, Saved, Scheduled). Browse shows a scrollable list grouped/filterable by category chips.</li>
+<li><strong>Map link out</strong>: <code>IdeaDetailScreen</code> button calls <code>Linking.openURL(&quot;https://www.google.com/maps/search/?api=1&amp;query=&quot; + encodeURIComponent(idea.mapsQuery))</code>. Works on iOS and Android — opens Google Maps app if installed, otherwise the browser.</li>
+<li><strong>Save</strong>: heart icon on detail screen toggles persistence in AsyncStorage under key <code>duo-dates:saved</code>.</li>
+<li><strong>Schedule</strong>: opens <code>@react-native-community/datetimepicker</code>. On confirm: writes to <code>duo-dates:scheduled</code>, schedules an <code>expo-notifications</code> local notification at that timestamp, and stores the returned notification ID so it can be cancelled later.</li>
+<li><strong>Countdown</strong>: <code>ScheduledScreen</code> uses a <code>useEffect</code> + <code>setInterval(..., 1000)</code> to update a live &quot;in 2d 4h 13m&quot; string per scheduled date.</li>
+<li><strong>ICS export</strong>: <code>buildIcs</code> produces a minimal VCALENDAR/VEVENT string (UID = scheduled date id, SUMMARY = idea title, DESCRIPTION = idea description, DTSTART/DTEND in UTC). <code>exportIcs</code> writes it via <code>expo-file-system</code> to the cache dir as <code>&lt;title&gt;.ics</code> then calls <code>expo-sharing.shareAsync</code> so the user can hand it to Calendar / email / Drive.</li>
+<li><strong>Notifications</strong>: at app startup, request permission once. Permission denial is non-blocking — scheduling still saves the date and offers the .ics export.</li>
+</ul>
+<h2>Critical files (in order of writing)</h2>
+<ol>
+<li><code>package.json</code>, <code>app.json</code>, <code>tsconfig.json</code>, <code>babel.config.js</code> — project scaffold</li>
+<li><code>src/types.ts</code>, <code>src/data/ideas.ts</code> — data model + seed ideas</li>
+<li><code>src/storage/storage.ts</code> — AsyncStorage wrappers</li>
+<li><code>src/notifications/notifications.ts</code>, <code>src/calendar/ics.ts</code>, <code>src/maps/maps.ts</code> — utilities</li>
+<li><code>src/components/IdeaCard.tsx</code>, <code>src/components/EmptyState.tsx</code></li>
+<li><code>src/screens/*</code> — four screens</li>
+<li><code>App.tsx</code> — wire navigation + bootstrap</li>
+<li><code>README.md</code></li>
+<li><code>.gitignore</code> — node_modules, .expo, dist</li>
+</ol>
+<h2>Renaming</h2>
+<ul>
+<li><strong>Inside the repo</strong>: <code>package.json</code> → <code>&quot;name&quot;: &quot;duo-dates&quot;</code>; <code>app.json</code> → <code>&quot;name&quot;: &quot;duo-dates&quot;</code>, <code>&quot;slug&quot;: &quot;duo-dates&quot;</code>; README headed <code># duo-dates</code>.</li>
+<li><strong>Local folder</strong>: I&#39;ll leave <code>/home/user/NigelDesira</code> as-is (renaming the cwd mid-session breaks tooling) and document the rename step in the README.</li>
+<li><strong>GitHub repo</strong>: outside my MCP scope. README will include the steps: GitHub → repo → Settings → Rename to <code>duo-dates</code>, then <code>git remote set-url origin …</code>.</li>
+</ul>
+<h2>Verification</h2>
+<ul>
+<li><code>npm install</code> resolves without peer-dep errors.</li>
+<li><code>npx tsc --noEmit</code> passes (strict TS).</li>
+<li><code>npx expo start</code> boots Metro; app loads in Expo Go (manual check the user can run after pulling).</li>
+<li>Manual smoke checklist (in README): browse list renders → tap idea → &quot;Find nearby on Maps&quot; opens maps → save → appears in Saved tab → schedule for ~1 min from now → notification fires → &quot;Export .ics&quot; opens share sheet → cancel removes from Scheduled tab.</li>
+</ul>
+<h2>Out of scope</h2>
+<ul>
+<li>No real-time Places API, no auth, no backend, no multi-user sync, no app-store builds. All data is on-device.</li>
+</ul>
+
+</main>
+</body>
+</html>

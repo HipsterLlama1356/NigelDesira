@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "duo-dates",
+    "slug": "duo-dates",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffe1ec"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.duodates.app"
+    },
+    "android": {
+      "package": "com.duodates.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffe1ec"
+      }
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#e85a8b"
+        }
+      ]
+    ]
+  }
+}
