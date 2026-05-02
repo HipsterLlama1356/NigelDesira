@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>duo-dates · preview</title>
+<style>
+  :root {
+    --bg: #fff5f8;
+    --bg-deep: #ffe1ec;
+    --card: #ffffff;
+    --border: #f1d3df;
+    --text: #1f1626;
+    --muted: #7a6a72;
+    --accent: #e85a8b;
+    --accent-dark: #b8336a;
+    --plum: #7a3a8c;
+    --chip: #fde7ee;
+    --chip-text: #7a3a52;
+    --danger: #d04545;
+    --gradient-hero: linear-gradient(135deg, #ff8fb1 0%, #e85a8b 50%, #7a3a8c 100%);
+    --gradient-fab: linear-gradient(135deg, #ff8fb1 0%, #7a3a8c 100%);
+    --gradient-card: linear-gradient(135deg, #ffffff 0%, #fff0f6 100%);
+    --gradient-countdown: linear-gradient(90deg, #fde7ee 0%, #ffd6e6 100%);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #f0e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    -webkit-text-size-adjust: 100%;
+  }
+  .page-title {
+    text-align: center;
+    color: var(--plum);
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-size: 12px;
+    padding: 24px 0 8px;
+  }
+  .page-subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 360px;
+    margin: 0 auto 24px;
+    padding: 0 16px;
+    line-height: 1.5;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px 16px 64px;
+    justify-items: center;
+  }
+  .phone {
+    width: 360px;
+    max-width: 100%;
+    background: var(--bg);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(122, 58, 140, 0.25);
+    border: 1px solid #e8c8d6;
+    display: flex;
+    flex-direction: column;
+    height: 720px;
+  }
+  .phone-label {
+    text-align: center;
+    color: var(--accent-dark);
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .frame {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .hero {
+    background: var(--gradient-hero);
+    padding: 28px 20px 28px;
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 22px;
+    color: white;
+  }
+  .kicker {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+  }
+  .heading {
+    font-size: 30px;
+    font-weight: 900;
+    margin: 8px 0 8px;
+    letter-spacing: -0.5px;
+  }
+  .sub {
+    color: #fff8fc;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+  .chips {
+    display: flex; gap: 8px; padding: 12px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chip {
+    flex: 0 0 auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--chip-text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 16px;
+  }
+
+  .card {
+    margin: 8px 16px;
+    border-radius: 22px;
+    border: 1px solid var(--border);
+    background: var(--gradient-card);
+    padding: 12px;
+    display: flex; gap: 12px;
+    box-shadow: 0 4px 12px rgba(184, 51, 106, 0.10);
+  }
+  .badge {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    background: var(--bg-deep);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    flex: 0 0 auto;
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-title-row {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-title {
+    font-weight: 800; font-size: 16px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .heart { color: var(--accent); font-size: 17px; }
+  .meta-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 4px;
+  }
+  .pill {
+    background: var(--chip);
+    color: var(--chip-text);
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .meta-text { color: var(--muted); font-size: 12px; font-weight: 600; }
+  .desc { color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.4;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .fab {
+    position: absolute;
+    right: 16px;
+    bottom: 76px;
+    background: var(--gradient-fab);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 14px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 18px rgba(122, 58, 140, 0.4);
+  }
+
+  .tabbar {
+    display: flex; justify-content: space-around;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 12px;
+  }
+  .tab { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--muted); font-weight: 700; }
+  .tab .ico { font-size: 18px; line-height: 22px; }
+  .tab.active { color: var(--accent); }
+
+  .phone { position: relative; }
+
+  /* Detail screen */
+  .detail-hero {
+    background: var(--gradient-hero);
+    padding: 28px 20px 36px;
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 22px;
+    color: white;
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+  }
+  .detail-circle {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 56px;
+    margin-bottom: 12px;
+  }
+  .detail-title {
+    font-size: 24px; font-weight: 900; text-align: center;
+    letter-spacing: -0.3px;
+  }
+  .detail-meta {
+    display: flex; gap: 8px; align-items: center; margin-top: 12px;
+  }
+  .hero-pill {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .hero-meta-text { color: #fff8fc; font-size: 12px; font-weight: 600; }
+  .save-btn {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 44px; height: 44px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 22px;
+  }
+  .body { padding: 18px; }
+  .section-label {
+    color: var(--accent-dark);
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .body p { color: var(--text); font-size: 14px; line-height: 1.55; margin: 0 0 18px; }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-secondary { background: var(--bg-deep); color: var(--accent); }
+  .btn-danger { background: var(--danger); color: white; }
+
+  /* Scheduled card */
+  .sched-card {
+    margin: 12px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 14px;
+    box-shadow: 0 4px 12px rgba(184, 51, 106, 0.10);
+  }
+  .sched-row { display: flex; gap: 12px; align-items: center; }
+  .sched-when { color: var(--muted); font-size: 12px; margin-top: 2px; font-weight: 600; }
+  .countdown-pill {
+    align-self: flex-start;
+    background: var(--gradient-countdown);
+    color: var(--accent-dark);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    margin-top: 12px;
+    display: inline-block;
+  }
+  .countdown-pill.live {
+    background: var(--gradient-fab);
+    color: white;
+  }
+  .sched-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .sched-actions .btn { flex: 1; margin: 0; padding: 10px; font-size: 13px; }
+
+  /* Empty state */
+  .empty {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px;
+    text-align: center;
+  }
+  .empty-emoji { font-size: 56px; margin-bottom: 12px; }
+  .empty-title { font-weight: 800; font-size: 17px; color: var(--text); margin-bottom: 6px; }
+  .empty-body { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  .note {
+    background: white; border: 1px dashed var(--accent);
+    color: var(--muted); font-size: 12px;
+    padding: 10px 14px; border-radius: 10px;
+    max-width: 520px; margin: 0 auto 24px;
+    text-align: center; line-height: 1.45;
+  }
+</style>
+</head>
+<body>
+  <div class="page-title">duo · dates · preview</div>
+  <div class="page-subtitle">A static visual preview of the app — gradients, cards, and layout. Not interactive (buttons don't actually do anything).</div>
+  <div class="note">Open on your phone to feel the real proportions. The actual app behaves identically — taps, scrolling, haptics work in Expo Go.</div>
+
+  <div class="grid">
+    <!-- BROWSE -->
+    <div class="frame">
+      <div class="phone-label">Browse</div>
+      <div class="phone">
+        <div class="hero">
+          <div class="kicker">duo · dates</div>
+          <div class="heading">Plan your next one</div>
+          <div class="sub">20 hand-picked ideas to pull you out of the what-do-you-wanna-do loop.</div>
+        </div>
+        <div class="chips">
+          <div class="chip active">All</div>
+          <div class="chip">Food</div>
+          <div class="chip">Outdoors</div>
+          <div class="chip">Indoor</div>
+          <div class="chip">Adventure</div>
+          <div class="chip">Cozy</div>
+        </div>
+        <div class="scroll">
+          <div class="card">
+            <div class="badge">🧺</div>
+            <div class="card-body">
+              <div class="card-title-row"><div class="card-title">Sunset Picnic in the Park</div><span class="heart">♥</span></div>
+              <div class="meta-row"><div class="pill">Outdoors</div><div class="meta-text">2h · $</div></div>
+              <div class="desc">Pack a basket with cheese, fruit, and a blanket. Find a hill or open lawn and time it so you arrive 30 minutes before sunset.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="badge">🍜</div>
+            <div class="card-body">
+              <div class="card-title-row"><div class="card-title">Ramen Crawl</div></div>
+              <div class="meta-row"><div class="pill">Food</div><div class="meta-text">2h 30m · $$</div></div>
+              <div class="desc">Pick three highly-rated ramen spots nearby. Share one bowl at each. Rank them on a napkin at the end.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="badge">🎨</div>
+            <div class="card-body">
+              <div class="card-title-row"><div class="card-title">Art Museum + Coffee</div></div>
+              <div class="meta-row"><div class="pill">Cultural</div><div class="meta-text">3h · $$</div></div>
+              <div class="desc">Spend two hours wandering a museum. Each pick a favourite piece and explain why over coffee afterwards.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="badge">🌌</div>
+            <div class="card-body">
+              <div class="card-title-row"><div class="card-title">Stargazing Drive</div><span class="heart">♥</span></div>
+              <div class="meta-row"><div class="pill">Outdoors</div><div class="meta-text">3h · $</div></div>
+              <div class="desc">Drive 30 minutes outside the city. Bring a blanket, hot chocolate, and a stargazing app.</div>
+            </div>
+          </div>
+        </div>
+        <div class="fab">✨ Surprise me</div>
+        <div class="tabbar">
+          <div class="tab active"><div class="ico">💡</div>Browse</div>
+          <div class="tab"><div class="ico">♥</div>Saved</div>
+          <div class="tab"><div class="ico">📅</div>Scheduled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL -->
+    <div class="frame">
+      <div class="phone-label">Idea Detail</div>
+      <div class="phone">
+        <div class="detail-hero">
+          <div class="save-btn">♥</div>
+          <div class="detail-circle">🍜</div>
+          <div class="detail-title">Ramen Crawl</div>
+          <div class="detail-meta">
+            <div class="hero-pill">FOOD</div>
+            <div class="hero-meta-text">2h 30m · $$</div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="section-label">The vibe</div>
+          <p>Pick three highly-rated ramen spots nearby. Share one bowl at each. Rank them on a napkin at the end. Loser of the rank-off picks dessert.</p>
+          <div class="btn btn-primary">Find nearby on Google Maps</div>
+          <div class="btn btn-secondary">Schedule a date</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab active"><div class="ico">💡</div>Browse</div>
+          <div class="tab"><div class="ico">♥</div>Saved</div>
+          <div class="tab"><div class="ico">📅</div>Scheduled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULED -->
+    <div class="frame">
+      <div class="phone-label">Scheduled</div>
+      <div class="phone">
+        <div class="hero">
+          <div class="kicker">upcoming</div>
+          <div class="heading">Scheduled</div>
+          <div class="sub">2 dates on the calendar.</div>
+        </div>
+        <div class="scroll">
+          <div class="sched-card">
+            <div class="sched-row">
+              <div class="badge">🌅</div>
+              <div>
+                <div class="card-title">Sunrise Breakfast Spot</div>
+                <div class="sched-when">Sat, May 9 · 6:30 AM</div>
+              </div>
+            </div>
+            <div class="countdown-pill">in 6d 14h 22m</div>
+            <div class="sched-actions">
+              <div class="btn btn-secondary">Add to calendar</div>
+              <div class="btn btn-danger">Cancel</div>
+            </div>
+          </div>
+          <div class="sched-card">
+            <div class="sched-row">
+              <div class="badge">🍣</div>
+              <div>
+                <div class="card-title">Sushi Night at Home</div>
+                <div class="sched-when">Today · 7:00 PM</div>
+              </div>
+            </div>
+            <div class="countdown-pill live">Happening now ✨</div>
+            <div class="sched-actions">
+              <div class="btn btn-secondary">Add to calendar</div>
+              <div class="btn btn-danger">Cancel</div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><div class="ico">💡</div>Browse</div>
+          <div class="tab"><div class="ico">♥</div>Saved</div>
+          <div class="tab active"><div class="ico">📅</div>Scheduled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAVED EMPTY -->
+    <div class="frame">
+      <div class="phone-label">Saved (empty)</div>
+      <div class="phone">
+        <div class="hero">
+          <div class="kicker">your shortlist</div>
+          <div class="heading">Saved</div>
+          <div class="sub">Tap the heart on any idea to keep it here.</div>
+        </div>
+        <div class="empty">
+          <div class="empty-emoji">♥</div>
+          <div class="empty-title">No saved ideas yet</div>
+          <div class="empty-body">Tap the heart on any idea to keep it here for later.</div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><div class="ico">💡</div>Browse</div>
+          <div class="tab active"><div class="ico">♥</div>Saved</div>
+          <div class="tab"><div class="ico">📅</div>Scheduled</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
