@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
 import { getIdea } from '../data/ideas';
 import { ScheduledDate } from '../types';
@@ -14,7 +10,7 @@ import { EmptyState } from '../components/EmptyState';
 import { getScheduled, removeScheduled } from '../storage/storage';
 import { cancelReminder } from '../notifications/notifications';
 import { exportIcs } from '../calendar/ics';
-import { colors, radius, spacing } from '../theme';
+import { colors, gradients, radius, shadow, spacing } from '../theme';
 
 export function ScheduledScreen() {
   const [items, setItems] = useState<ScheduledDate[]>([]);
@@ -42,6 +38,7 @@ export function ScheduledScreen() {
         text: 'Cancel date',
         style: 'destructive',
         onPress: async () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
           await cancelReminder(entry.notificationId);
           await removeScheduled(entry.id);
           reload();
@@ -53,6 +50,7 @@ export function ScheduledScreen() {
   const handleExport = async (entry: ScheduledDate) => {
     const idea = getIdea(entry.ideaId);
     if (!idea) return;
+    Haptics.selectionAsync().catch(() => {});
     try {
       await exportIcs(entry, idea);
     } catch (err) {
@@ -60,16 +58,31 @@ export function ScheduledScreen() {
     }
   };
 
+  const renderHeader = (count: number) => (
+    <LinearGradient
+      colors={gradients.hero}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.header}
+    >
+      <Text style={styles.kicker}>upcoming</Text>
+      <Text style={styles.heading}>Scheduled</Text>
+      <Text style={styles.subheading}>
+        {count === 0
+          ? 'Pick something special and lock it in.'
+          : `${count} date${count === 1 ? '' : 's'} on the calendar.`}
+      </Text>
+    </LinearGradient>
+  );
+
   if (items.length === 0) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.heading}>Scheduled</Text>
-        </View>
+        {renderHeader(0)}
         <EmptyState
           emoji="📅"
-          title="Nothing scheduled"
-          body="Pick an idea and tap 'Schedule a date' to plan something."
+          title="Nothing scheduled yet"
+          body="Pick an idea and tap 'Schedule a date' — we'll remind you."
         />
       </View>
     );
@@ -77,12 +90,7 @@ export function ScheduledScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.heading}>Scheduled</Text>
-        <Text style={styles.subheading}>
-          {items.length} date{items.length === 1 ? '' : 's'} planned
-        </Text>
-      </View>
+      {renderHeader(items.length)}
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -91,28 +99,36 @@ export function ScheduledScreen() {
           const idea = getIdea(item.ideaId);
           if (!idea) return null;
           const elapsed = item.scheduledAt - now;
+          const live = elapsed <= 0;
           return (
             <View style={styles.card}>
               <View style={styles.row}>
-                <Text style={styles.emoji}>{idea.emoji}</Text>
+                <View style={styles.emojiBadge}>
+                  <Text style={styles.emoji}>{idea.emoji}</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.title}>{idea.title}</Text>
-                  <Text style={styles.when}>
-                    {new Date(item.scheduledAt).toLocaleString()}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.countdown,
-                      elapsed <= 0 && { color: colors.accent },
-                    ]}
-                  >
-                    {formatCountdown(elapsed)}
-                  </Text>
+                  <Text style={styles.when}>{formatWhen(item.scheduledAt)}</Text>
                 </View>
               </View>
+              <LinearGradient
+                colors={live ? gradients.fab : gradients.countdown}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.countdownPill}
+              >
+                <Text
+                  style={[
+                    styles.countdownText,
+                    live && { color: '#ffffff' },
+                  ]}
+                >
+                  {formatCountdown(elapsed)}
+                </Text>
+              </LinearGradient>
               <View style={styles.actions}>
                 <Button
-                  label="Export .ics"
+                  label="Add to calendar"
                   variant="secondary"
                   onPress={() => handleExport(item)}
                   style={{ flex: 1 }}
@@ -132,8 +148,22 @@ export function ScheduledScreen() {
   );
 }
 
+function formatWhen(ms: number): string {
+  const d = new Date(ms);
+  const date = d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+  const time = d.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  return `${date} · ${time}`;
+}
+
 function formatCountdown(ms: number): string {
-  if (ms <= 0) return 'Happening now';
+  if (ms <= 0) return 'Happening now ✨';
   const totalSec = Math.floor(ms / 1000);
   const days = Math.floor(totalSec / 86400);
   const hours = Math.floor((totalSec % 86400) / 3600);
@@ -147,21 +177,65 @@ function formatCountdown(ms: number): string {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  heading: { fontSize: 28, fontWeight: '800', color: colors.text },
-  subheading: { color: colors.textMuted, marginTop: 2 },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xl,
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
+  },
+  kicker: {
+    color: '#ffffffcc',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+  },
+  heading: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#ffffff',
+    marginTop: spacing.sm,
+    letterSpacing: -0.5,
+  },
+  subheading: {
+    color: '#fff8fc',
+    marginTop: spacing.sm,
+    fontSize: 14,
+    fontWeight: '500',
+  },
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
     gap: spacing.md,
+    ...(shadow.card as object),
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  emoji: { fontSize: 36 },
-  title: { fontSize: 16, fontWeight: '700', color: colors.text },
-  when: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
-  countdown: { color: colors.text, fontWeight: '600', marginTop: 4 },
+  emojiBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.lg,
+    backgroundColor: colors.bgDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emoji: { fontSize: 32 },
+  title: { fontSize: 17, fontWeight: '800', color: colors.text, letterSpacing: 0.2 },
+  when: { color: colors.textMuted, fontSize: 13, marginTop: 2, fontWeight: '600' },
+  countdownPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+  },
+  countdownText: {
+    color: colors.accentDark,
+    fontWeight: '800',
+    fontSize: 14,
+    letterSpacing: 0.5,
+  },
   actions: { flexDirection: 'row', gap: spacing.sm },
 });

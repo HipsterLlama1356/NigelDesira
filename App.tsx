@@ -11,6 +11,7 @@ import { ScheduledScreen } from './src/screens/ScheduledScreen';
 import { IdeaDetailScreen } from './src/screens/IdeaDetailScreen';
 import { RootStackParamList, TabParamList } from './src/types';
 import { requestNotificationPermission } from './src/notifications/notifications';
+import { useNotificationReconciliation } from './src/hooks/useNotificationReconciliation';
 import { colors } from './src/theme';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -49,6 +50,7 @@ export default function App() {
   useEffect(() => {
     requestNotificationPermission();
   }, []);
+  useNotificationReconciliation();
 
   return (
     <SafeAreaProvider>

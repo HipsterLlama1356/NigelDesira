@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -7,13 +7,15 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CATEGORIES, IDEAS } from '../data/ideas';
 import { Category, RootStackParamList } from '../types';
 import { IdeaCard } from '../components/IdeaCard';
+import { SurpriseButton } from '../components/SurpriseButton';
 import { getSaved } from '../storage/storage';
-import { colors, radius, spacing } from '../theme';
+import { colors, gradients, radius, spacing } from '../theme';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -31,14 +33,28 @@ export function BrowseScreen() {
   const filtered =
     filter === 'All' ? IDEAS : IDEAS.filter((i) => i.category === filter);
 
+  const onSurprise = () => {
+    if (filtered.length === 0) return;
+    const pick = filtered[Math.floor(Math.random() * filtered.length)];
+    navigation.navigate('IdeaDetail', { ideaId: pick.id });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.heading}>Date Ideas</Text>
+      <LinearGradient
+        colors={gradients.hero}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.hero}
+      >
+        <Text style={styles.kicker}>duo · dates</Text>
+        <Text style={styles.heading}>Plan your next one</Text>
         <Text style={styles.subheading}>
-          {filtered.length} ideas to plan your next one
+          {filtered.length} hand-picked ideas to pull you out of the
+          what-do-you-wanna-do loop.
         </Text>
-      </View>
+      </LinearGradient>
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -59,10 +75,11 @@ export function BrowseScreen() {
           );
         })}
       </ScrollView>
+
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingVertical: spacing.sm }}
+        contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <IdeaCard
             idea={item}
@@ -71,28 +88,58 @@ export function BrowseScreen() {
           />
         )}
       />
+
+      <SurpriseButton onPress={onSurprise} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  heading: { fontSize: 28, fontWeight: '800', color: colors.text },
-  subheading: { color: colors.textMuted, marginTop: 2 },
+  hero: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xl,
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
+  },
+  kicker: {
+    color: '#ffffffcc',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+  },
+  heading: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#ffffff',
+    marginTop: spacing.sm,
+    letterSpacing: -0.5,
+  },
+  subheading: {
+    color: '#fff8fc',
+    marginTop: spacing.sm,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
   chipRow: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     gap: spacing.sm,
   },
   chip: {
-    backgroundColor: colors.chip,
+    backgroundColor: colors.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radius.lg,
+    borderRadius: radius.pill,
     marginRight: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  chipActive: { backgroundColor: colors.chipActive },
-  chipText: { color: colors.chipText, fontWeight: '600' },
+  chipActive: { backgroundColor: colors.chipActive, borderColor: colors.chipActive },
+  chipText: { color: colors.chipText, fontWeight: '700', fontSize: 13 },
   chipTextActive: { color: colors.chipActiveText },
+  list: { paddingTop: spacing.sm, paddingBottom: 96 },
 });

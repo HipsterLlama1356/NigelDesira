@@ -1,7 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { DateIdea } from '../types';
-import { colors, radius, spacing } from '../theme';
+import { colors, gradients, radius, shadow, spacing } from '../theme';
 
 interface Props {
   idea: DateIdea;
@@ -13,66 +14,90 @@ export function IdeaCard({ idea, saved, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.outer, pressed && styles.pressed]}
     >
-      <Text style={styles.emoji}>{idea.emoji}</Text>
-      <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <Text style={styles.title} numberOfLines={1}>
-            {idea.title}
-          </Text>
-          {saved && <Text style={styles.heart}>❤</Text>}
+      <LinearGradient
+        colors={gradients.card}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.card}
+      >
+        <View style={styles.emojiBadge}>
+          <Text style={styles.emoji}>{idea.emoji}</Text>
         </View>
-        <View style={styles.metaRow}>
-          <View style={styles.chip}>
-            <Text style={styles.chipText}>{idea.category}</Text>
+        <View style={styles.content}>
+          <View style={styles.headerRow}>
+            <Text style={styles.title} numberOfLines={1}>
+              {idea.title}
+            </Text>
+            {saved && <Text style={styles.heart}>♥</Text>}
           </View>
-          <Text style={styles.meta}>
-            ~{Math.round(idea.durationMinutes / 60)}h · {idea.estimatedCost}
+          <View style={styles.metaRow}>
+            <View style={styles.chip}>
+              <Text style={styles.chipText}>{idea.category}</Text>
+            </View>
+            <Text style={styles.meta}>
+              {formatDuration(idea.durationMinutes)} · {idea.estimatedCost}
+            </Text>
+          </View>
+          <Text style={styles.desc} numberOfLines={2}>
+            {idea.description}
           </Text>
         </View>
-        <Text style={styles.desc} numberOfLines={2}>
-          {idea.description}
-        </Text>
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 }
 
+function formatDuration(mins: number): string {
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+  outer: {
     marginHorizontal: spacing.lg,
     marginVertical: spacing.sm,
+    borderRadius: radius.xl,
+    ...(shadow.card as object),
+  },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
+  card: {
+    flexDirection: 'row',
+    borderRadius: radius.xl,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  pressed: { opacity: 0.7 },
-  emoji: { fontSize: 36, marginRight: spacing.md },
-  content: { flex: 1 },
+  emojiBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.lg,
+    backgroundColor: colors.bgDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  emoji: { fontSize: 36 },
+  content: { flex: 1, justifyContent: 'center' },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  title: { fontSize: 16, fontWeight: '700', color: colors.text, flex: 1 },
-  heart: { color: colors.accent, fontSize: 16, marginLeft: spacing.sm },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
+  title: { fontSize: 17, fontWeight: '800', color: colors.text, flex: 1, letterSpacing: 0.2 },
+  heart: { color: colors.accent, fontSize: 18, marginLeft: spacing.sm },
+  metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
   chip: {
     backgroundColor: colors.chip,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
     marginRight: spacing.sm,
   },
-  chipText: { color: colors.chipText, fontSize: 12, fontWeight: '600' },
-  meta: { color: colors.textMuted, fontSize: 12 },
-  desc: { color: colors.textMuted, marginTop: spacing.xs, fontSize: 13 },
+  chipText: { color: colors.chipText, fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+  meta: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  desc: { color: colors.textMuted, marginTop: spacing.xs, fontSize: 13, lineHeight: 18 },
 });
